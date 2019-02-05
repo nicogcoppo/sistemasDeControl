@@ -29,15 +29,77 @@ yfinal = mean (ytail(max (floor (hf/2), 1):hf));
 ##---------------------------------------------
 
 i=0;
-while (abs(ys-yfinal)>VS*yfinal)
-  c=c+i+1;
-  clear i;
-  ## Se busca el maximo en el segmento
-  ## del dominio que excluye al ultimo maximo
-  ## no satisfactorio
-  [ys, i]=max(y(c:h));
-  ts=t(i+c);
-endwhile
+j=0;
+c=1;
+flagMax=0;
+flagMin=0;
+
+% Si es sistema sub-amortiguado
+if (ypico>1.02*yfinal)
+
+  while (flagMax*flagMin==0)
+    c=c+j+i;
+    ## Se busca el maximo en el segmento
+    ## del dominio que excluye al ultimo maximo
+    ## no satisfactorio
+    [ys, i]=max(y(c:h));
+
+    % Testeo aceptabilidad del maximo
+    if (abs(ys-yfinal)<=VS*yfinal);
+      flagMax=1;
+    else
+      flagMax=0;
+    endif
+
+    % Si dicho maximo se encuentra post un minimo aceptable
+    if (flagMax*flagMin==1)
+      ys=ysm;
+      ts=t(j+c);
+      break;
+    endif
+
+    % Busco minimo inmediato
+    [ysm, j]=min(y(c+i:h));
+
+    % Testeo aceptabilidad del minimo
+    if (abs(abs(ysm)-yfinal)<=VS*yfinal)
+      flagMin=1;
+    else
+      flagMin=0;
+    endif
+    
+    ts=t(i+c);
+    
+  endwhile
+
+ else % si NO es sistema sub-amortiguado
+
+   flagMax=1;
+   
+  while (flagMax*flagMin==0)
+  
+    c=c+j;
+
+    % busco el primer valor aceptable 
+    while (abs(abs(y(c))-yfinal)>VS*yfinal)
+      c++;
+    endwhile
+
+    % testeamos el minimo inmediato
+    [ys, j]=min(y(c:h));
+
+    % verificamos si cumple rango
+    if (abs(abs(ys)-yfinal)<=VS*yfinal)
+      flagMin=1;
+    else
+      flagMin=0;
+    endif     
+    
+  endwhile 
+  
+  ts=t(c);  
+ 
+endif
 
 a1=yfinal;a2=ts;a3=ypico;
 
