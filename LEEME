@@ -1,0 +1,7 @@
+Para el correcto funcionamiento de este conjunto de scripts será necesario
+contar con los siguientes paquetes instalados para el software OCTAVE:
+
+- SYMBOLIC
+- OPTIM
+- CONTROL
+
