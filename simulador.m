@@ -43,14 +43,7 @@ rpmInicial=158; % Revoluciones por minuto minimas para arranque
 
 acceEstacionaria=0.4; % Aceleracion de regimen estacionario
 
-
-##########                              % PERFORMANCE DEL PID
-
 encendidoPID=95;% Porcentaje de las RPM objetivo que enciende el PID
-
-MS=15; % Maxima sobreelongacion en %
-
-deltaRangoControl=1.1; % Numero a multiplicar al valor del rele para sintonizar
 
 ##########                              % FUNCIONES
 
@@ -112,8 +105,6 @@ if (eleccion==1)    % SIMULADOR
   Y=po;
 
   i=0;
-
-  MSactual=2*MS;rangoControl=1;
 
   atrasoEncendidoPID=(encendidoPID/100);
 
