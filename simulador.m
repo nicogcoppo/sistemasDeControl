@@ -131,7 +131,7 @@ if (eleccion==1)    % SIMULADOR
       
       [k,a,yi,yf]=intervaloLineal(minW,maxW,po,fu);
       
-      [pid,Kc,Ti,Td,alpha]=sintonizacion(po,J,B,k,a,f,rangoControl);
+      [pid,Kc,Ti,Td,alpha]=sintonizacion(po,J,B,k,a,f);
 
       [y,t]=respuestaLazoCerrado(po,yi,yf,objetivo,J,B,k,a,f,pid);
       
