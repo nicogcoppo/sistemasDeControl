@@ -178,6 +178,8 @@ function [pid,Kc,Ti,Td,alpha]=sintonizacion(po,J,B,k,a,FR)
       subplot(2,2,3);
 
       Uglobal=[Uglobal;-U*mod(i,2)*ones(size(yVector))];
+
+      Uglobal(end)=0;
       
       plot(T,Uglobal*radRpm,["--" markStyle(1) color(1) ";rele;"]);grid on;
 
