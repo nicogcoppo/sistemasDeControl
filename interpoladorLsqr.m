@@ -7,8 +7,8 @@
 ##                        |   de Cp vs. Lambda       |
 ##---------------------------------------------------
 
-function [minRPM,maxRPM,rpmTransicion,fuI,fuF]=interpoladorLsqr(rho,d,Vinf)
-
+function [minW,maxW,fu]=interpoladorLsqr(rho,d,Vinf)
+  
   pkg load symbolic optim;
   
 				% DECLARACIONES
@@ -19,76 +19,58 @@ function [minRPM,maxRPM,rpmTransicion,fuI,fuF]=interpoladorLsqr(rho,d,Vinf)
 
   color=["k","r","g","b","m","c","k","r","g","b","m","c"];
 
+  
+  rpmRad=(2*pi)/60;
+
+  radRpm=(1/rpmRad);
+
+				% CONFIGURACION DE LA INTERPOLACION
+
+  nPol=8;
+  
 				% SCRIPT
 
-
+  
+  
   data=dlmread('curvaCpTSR.csv',',');
 
   datum=size(data,1);
 
-  rpm=data(:,1)*(Vinf*60/(2*pi*(d/2)));  
+  w=data(:,1).*(Vinf/(d/2));  
 
-  torque=0.0030447*(data(:,2).*.5*rho*(pi*(d/2)^2)*Vinf^3)./(rpm*2*pi/60);
+  torque=(data(:,2).*.5*rho*(pi*(d/2)^2)*Vinf^3)./(w);
+    
+  minW=w(1);
 
-  minRPM=rpm(1);
-
-  maxRPM=rpm(datum);
+  maxW=w(datum);
   
-				% partimos el torque a la mitad
-
-  [maxT,i]=max(torque); % dividimos en el maximo
-
-  rpmTransicion=rpm(i);
+  % Funcion propuesta
   
-  torqueI=torque(1:i);rpmI=rpm(1:i);
-
-  torqueF=torque(i:datum);rpmF=rpm(i:datum);
-
-				% Interpolacion Leaser-q/
-
-  leasqrfuncI = @(x, p) p(3) + p(1) * exp (p(2) * x);
-
-  leasqrfuncF = @(x, p) p(3) + p(1)*x + p(2)*sin(x);
-
-  FI = leasqrfuncI;
-
-  FF = leasqrfuncF;
-
-  pinI = [1e-2;1e-2;0];
-
-  pinF = [1e-2;1e-2;maxT]; 
-
-  [fI,pI]=leasqr (rpmI,torqueI, pinI, FI);
-
-  fuI=leasqrfuncI(z,pI);
   
-  [fF,pF]=leasqr (rpmF,torqueF, pinF, FF);
+  
+  p=polyfit(w,torque,nPol);
 
-  fuF=leasqrfuncF(z,pF);
-
+  fu=poly2sym(p,z);
+     
 				% Visualizacion
 
-  figure(2)
+  figure(1);clf;set(1,"name","INTERPOLADOR LSQR");subplot(1,2,1);
   
-  hold on;grid on;title ('Regresion no-lineal');
+  hold on;grid on;title ('Regresion no-lineal');xlabel("RPM");ylabel("Torque (N m)");
   
-  plot(rpmI,torqueI,["--" markStyle(1) color(1) ";Layf Torque" ";"]);
+  plot(w*radRpm,torque,["--" markStyle(1) color(1) ";Layf Torque" ";"]);
 
-  plot(rpmI,fI,["--" markStyle(1) color(2) ";Leasqr Torque" ";"]);
-
-  plot(rpmF,torqueF,["--" markStyle(2) color(3) ";Layf Torque" ";"]);
-
-  plot(rpmF,fF,["--" markStyle(2) color(4) ";Leasqr Torque" ";"]);grid on;
+  plot(w*radRpm,polyval(p,w),["--" markStyle(1) color(2) ";Leasqr Torque" ";"]);
 
   hold off;
 
-  ## figure(1);subplot(2,2,2);hold on;grid on;title ('Error');
+  subplot(1,2,2);hold on;grid on;title ('Error');
 
-  ## plot(rpmI,fI./torqueI);
+  xlabel("RPM");ylabel("Error (%)");
+  
+  plot(w*radRpm,abs(1-polyval(p,w)./torque)*100);
 
-  ## plot(rpmF,fF./torqueF);
-
-  ## hold off
+  hold off;
 
 endfunction
 

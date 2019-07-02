@@ -7,7 +7,7 @@
 ##                        |   lineales segun criterio|
 ##---------------------------------------------------
 
-function [k,alfa,yI,yF]=intervaloLineal(minRPM,maxRPM,po,maxT,fuI,fuF)
+function [k,alfa,yI,yF]=intervaloLineal(minW,maxW,po,fu)
 
   pkg load optim symbolic;
 
@@ -25,34 +25,33 @@ function [k,alfa,yI,yF]=intervaloLineal(minRPM,maxRPM,po,maxT,fuI,fuF)
   i=0;
 
   errorRel=0;
+  
+  rpmRad=(2*pi)/60;
 
+  radRpm=(1/rpmRad);
+
+  
 ##########				% CONFIGURACIONES DEL USUARIO
 
   errorLinealTolerable=1; % Maximo error de linealizacion tolerable en porcentaje
 
-  resolucionIntervaloLineal=20; % Resolucion de linealizacion en RPM
+  resolucionIntervaloLineal=5; % Resolucion de linealizacion en RPM
 
   pInter=5; % Presicion de la integracion numerica en partes
 
 ##########				% SCRIPT
 
+  resolucionIntervaloLinealW=resolucionIntervaloLineal*rpmRad;
+  
+  funcionSym=fu;
 
-  if (po<maxT)  % Tomamos funcion por izquierda o por derecha
-    funcionSym=fuI;
-    rpm=linspace(minRPM,maxT,100);
-    maxIteraciones=maxT/(2*resolucionIntervaloLineal);
-    ccMax=maxT;
-    ccMin=minRPM;
-  else
-    funcionSym=fuF;
-    rpm=linspace(maxT,maxRPM,100);
-    maxIteraciones=(maxRPM-maxT)/(2*resolucionIntervaloLineal);
-    ccMax=maxRPM;
-    ccMin=maxT;
-  endif
+  w=linspace(minW,maxW,100);
+
+  maxIteraciones=(maxW-minW)/(2*resolucionIntervaloLineal);
+
 
 				% Aproximacion de taylor
-
+  
   derivada=diff(funcionSym,z);
 
   taylorSym=funcionSym+derivada*(x-z);
@@ -71,10 +70,10 @@ function [k,alfa,yI,yF]=intervaloLineal(minRPM,maxRPM,po,maxT,fuI,fuF)
 
     limSup=po+anchoIntervalo;
     
-    if (limInf<ccMin)
-      limInf=ccMin;
-    elseif (limSup>ccMax)
-      limSup=ccMax;
+    if (limInf<minW)
+      limInf=minW;
+    elseif (limSup>maxW)
+      limSup=maxW;
     endif   
       
     espacio=linspace(limInf,limSup,pInter);
@@ -86,7 +85,7 @@ function [k,alfa,yI,yF]=intervaloLineal(minRPM,maxRPM,po,maxT,fuI,fuF)
     errorRel=abs((areaLineal/areaNoLineal)-1)*100;
 
   endwhile
-
+  
   anchoIntervalo=resolucionIntervaloLineal*(i-1);
 
   yI=limInf;
@@ -95,21 +94,21 @@ function [k,alfa,yI,yF]=intervaloLineal(minRPM,maxRPM,po,maxT,fuI,fuF)
   
   espacio=linspace(yI,yF,10);
 
-  figure(1);
+  figure(2);
   
   subplot(2,2,4);
 
   plot(1000*espacio,zeros(length(espacio)));
   
-  plot(espacio,taylor(espacio,po),["--" markStyle(1) color(1) ";Taylor" ";"]);hold on;grid on;
+  plot(espacio*radRpm,taylor(espacio,po),["--" markStyle(1) color(1) ";Taylor" ";"]);hold on;grid on;
 
-  plot(espacio,funcion(espacio),["--" markStyle(1) color(2) ";Leasqr" ";"]);grid on;
+  plot(espacio*radRpm,funcion(espacio),["--" markStyle(1) color(2) ";Leasqr" ";"]);grid on;
 
-  title ("INTERVALO LINEAL");
+  title ("INTERVALO LINEAL");xlabel("RPM");ylabel("Torque (N m)");
   
   hold off;
-    
-  coeficientes=coeffs(taylor(x,po));
+  
+  coeficientes=coeffs(taylor(x,po),x);
 
   k=double(coeficientes(1));
 

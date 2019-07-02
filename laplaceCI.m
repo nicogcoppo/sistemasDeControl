@@ -8,8 +8,10 @@
 ##---------------------------------------------------
 
 
-function [y,t]=laplaceCI(J,k,a,vo)
+function [y,t]=laplaceCI(J,B,k,a,vo,t)
 
+  
+  
   ## CONFIGURACION	
   
   pkg load control
@@ -19,38 +21,38 @@ function [y,t]=laplaceCI(J,k,a,vo)
   markStyle=["+","o","*",".","x","s","d","^","v",">","<","p","h"];
 
   color=["k","r","g","b","m","c","k","r","g","b","m","c"];
+
+  
+  rpmRad=(2*pi)/60;
+
+  radRpm=(1/rpmRad);
+
   
   ## SCRIPT
 				% ZERO INPUT
- 
+
+  
+  
   s=tf('s');
   
-  thetha=(a*s+vo*J*s^2)/(J*(s^2)-k*s);
-  
-  [ZI,t]=step(thetha,18);
+  thetha=(a*s+vo*J*s^2)/(J*(s^2)+(B-k)*s);
 
+  if (isnan(t)==1)       
+    [ZI,t]=step(thetha);    
+  else
+    [ZI]=step(thetha,t);
+  endif
+  
   y=ZI;
-				% ZERO STATE
+
   
-  ## FT=1/(J*s-k)
-
-  ## [n,d]=numden(FT); ## extraemos numerador y denominador
-
-  ## num=double(coeffs(n)); ## expresamos ambos matricialmente
-
-  ## den=double(coeffs(d)); ## se los convierte en numericos
-
-  ## thetha=tf(num,den); ## planteamos la ft matricialmente para
-
-  ## [ZE]=step(thetha,t);
-
-  figure(1);
+  figure(2);
   
   subplot(2,2,2);grid on;
   
-  plot(t,ZI,["--" markStyle(1) color(1) ";respuesta;"]);grid on;
+  plot(t,ZI*radRpm,["--" markStyle(1) color(1) ";respuesta;"]);grid on;
 
-  title ("RESPUESTA PARCIAL");
+  title ("RESPUESTA PARCIAL");xlabel("t (seg)");ylabel("RPM");
   
 
 endfunction
